@@ -6,3 +6,4 @@ basic search algorithm for autonomous indoors missions using PX4 and MAVROS
 2. make the code more modular to be easily integrated later in different programs.
 3. integrate it into the main autonomous program
 4. Update the code and commit the current implementation
+5. For documentation, make sure to add how to clone the code and catkin_make it and even include the steps for how to create a catkin_ws if you don't have one. This will help the code be easily re-usable. 
