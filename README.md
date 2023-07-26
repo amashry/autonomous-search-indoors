@@ -1,3 +1,4 @@
+![lawnmower_search_fig](https://github.com/amashry/autonomous-search-indoors/assets/98168605/7b07b0ef-f52c-413b-99da-336e6f83761c)
 # autonomous-search-indoors
 basic search algorithm for autonomous indoors missions using PX4 and MAVROS
 
