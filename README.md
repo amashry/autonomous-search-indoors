@@ -4,6 +4,8 @@
 # Simulation 
 ![search_grid_simulation](https://github.com/amashry/autonomous-search-indoors/assets/98168605/630dc660-cc9f-40da-94bc-119e8b76bea8)
 
+full video: https://drive.google.com/file/d/1LT0K3gaqwdd0eGpYQzA2Q_Wcw3-fH4S5/view?usp=sharing 
+
 # autonomous-search-indoors
 basic search algorithm for autonomous indoors missions using PX4 and MAVROS
 
