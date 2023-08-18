@@ -2,13 +2,16 @@
 ![lawnmower_search_fig](https://github.com/amashry/autonomous-search-indoors/assets/98168605/7b07b0ef-f52c-413b-99da-336e6f83761c)
 
 # Simulation 
-![search_grid_simulation](https://github.com/amashry/autonomous-search-indoors/assets/98168605/630dc660-cc9f-40da-94bc-119e8b76bea8)
+![search_grid_simulation](https://github.com/amashry/autonomous-search-indoors/assets/98168605/9e1944bf-47f3-49e8-b9ff-0aa4eb79a228)
 
 full video: https://drive.google.com/file/d/1LT0K3gaqwdd0eGpYQzA2Q_Wcw3-fH4S5/view?usp=sharing 
 
 # Real Flight Test
 
-https://github.com/amashry/autonomous-search-indoors/assets/98168605/9f4a26d6-25d0-4ddd-b296-d58986dcae58
+
+
+https://github.com/amashry/autonomous-search-indoors/assets/98168605/91bc7c68-134e-46bd-bc28-38f212946184
+
 
 # autonomous-search-indoors
 basic search algorithm for autonomous indoors missions using PX4 and MAVROS
