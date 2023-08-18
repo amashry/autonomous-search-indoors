@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/ahmed/Desktop/788M/virtual_catkin/devel_isolated/apriltag_ros/include/**",
+        "/home/ahmed/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/ahmed/Desktop/788M/virtual_catkin/devel_isolated/apriltag/include/**",
+        "/home/ahmed/Desktop/788M/virtual_catkin/src/apriltag_ros/apriltag_ros/include/**",
+        "/home/ahmed/Desktop/788M/virtual_catkin/src/search_test/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

@@ -3,87 +3,31 @@
 #include <geometry_msgs/Twist.h>
 #include <mavros_msgs/PositionTarget.h>
 
+#include "../include/utils.hpp"
+
+
 #define PI  3.14159265358979323846264338327950
-#define RATE            30  // loop rate hz
-const double POSITION_COMPONENT_TOLERANCE_M = 0.10; // 10 centimeters, but represented in units of meters
+#define RATE            20  // loop rate hz ---> ADD THIS TO MAIN PROJECT 
+const double POSITION_COMPONENT_TOLERANCE_M = 0.40; // 40 centimeters (0.4m)
 
 
 std::vector<mavros_msgs::PositionTarget> waypoints;
 
 
-void generate_waypoints(){
-    double LENGHT = 4.5, WIDTH = 3.5; // Define Area Size
-    int INTERVAL = 4; // Define number of intervals between parallel lines
-    int SEARCH_TIME_SEC = 30; // Define time to cover the area in seconds 
-    
-    int num_of_steps = RATE*SEARCH_TIME_SEC;
-
-    double x0 = 0.0, y0 = 0.0, x_W = x0 + WIDTH, y_L = y0 + LENGHT; // Define the area limits here
-    double z = 1.0; // Fixed altitude
-    // double step_size = (INTERVAL+1)*WIDTH / num_of_steps; // Step size along x axis
-    double step_size = 1.0;
-    
-
-    bool forward = true; // Start moving in positive x direction
-    // double y1 = y0; 
-
-    for (double y = y0; y <= y_L; y += LENGHT/INTERVAL){
-        mavros_msgs::PositionTarget waypoint;
-        waypoint.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
-        waypoint.type_mask = mavros_msgs::PositionTarget::IGNORE_VX + mavros_msgs::PositionTarget::IGNORE_VY +
-                             mavros_msgs::PositionTarget::IGNORE_VZ + mavros_msgs::PositionTarget::IGNORE_AFX +
-                             mavros_msgs::PositionTarget::IGNORE_AFY + mavros_msgs::PositionTarget::IGNORE_AFZ +
-                             mavros_msgs::PositionTarget::FORCE + mavros_msgs::PositionTarget::IGNORE_YAW_RATE;
-        waypoint.yaw = PI/2;
-        waypoint.position.z = z;
-        waypoint.position.y = y;
-        if (forward){
-            for (double x = x0; x <= x_W; x += step_size){
-                waypoint.position.x = x;
-                waypoints.push_back(waypoint);
-            }
-        }
-        else{
-            for (double x = x_W; x >= x0; x -= step_size){
-                waypoint.position.x = x;
-                waypoints.push_back(waypoint);
-            }
-        }
-        forward = !forward; // Switch direction
-    }
-}
-
-/**
- * returns true if the drone's position is equal (within some tolerance) to the desired waypoint position 
-*/
-bool drone_is_approximately_at_waypoint(const mavros_msgs::PositionTarget waypoint, 
-                                        const geometry_msgs::PoseStamped current_pose,
-                                        const double position_component_tolerance) 
-{
-    // extract position values from PositionTarget msgs and PoseStamped msgs 
-    double x_inertial_desired = waypoint.position.x;
-    double y_inertial_desired = waypoint.position.y; 
-    double z_inertial_desired = waypoint.position.z; 
-
-
-    double x_inertial_current = current_pose.pose.position.x;
-    double y_inertial_current = current_pose.pose.position.y;
-    double z_inertial_current = current_pose.pose.position.z;
-
-    // if the absolute value between the positions of the drone in the inertial frame and the desired waypoint in the inertial 
-    // frame are all less than some tolerance, then that means the drone is approximately at the reference point, so return true
-    bool x_within_tolerance = std::abs(x_inertial_desired - x_inertial_current) < position_component_tolerance;
-    bool y_within_tolerance = std::abs(y_inertial_desired - y_inertial_current) < position_component_tolerance;
-    bool z_within_tolerance = std::abs(z_inertial_desired - z_inertial_current) < position_component_tolerance;
-
-    // only return true if all of the abolute values are within the tolerances
-    return x_within_tolerance && y_within_tolerance && z_within_tolerance;
-}
-
 geometry_msgs::PoseStamped current_pose;
 void pose_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
     current_pose = *msg;
 }
+
+// global variable to keep track of the current search waypoint index
+int current_wp_index = 0;
+
+// Arbitrary condition to trigger custom behavior
+// In this example, the custom behavior is triggered every 50 waypoints
+const int CONDITION_WAYPOINT_INTERVAL = 50;
+
+// bool variable to check if we finished search
+bool FINISHED_SEARCHING{false};
 
 int main(int argc, char **argv){
     ros::init(argc, argv, "search_test");
@@ -92,7 +36,15 @@ int main(int argc, char **argv){
     ros::Publisher local_pos_pub = nh.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 10);
     ros::Subscriber current_pos = nh.subscribe<geometry_msgs::PoseStamped>("mavros/local_position/pose", 10, pose_cb);
     
-    generate_waypoints();
+    // Define the desired search params for waypoint generation function
+    double length = 4.5, width = 3.5;
+    double altitude = 1.5;
+    int interval = 3;
+    int search_time_sec = 10;
+    
+    generate_search_waypoints(length, width, altitude, interval, search_time_sec);
+    // Use the getter function to access the waypoints
+    waypoints = get_search_waypoints();
 
     ros::Rate rate(RATE);
     // send a few setpoints before starting
@@ -104,18 +56,66 @@ int main(int argc, char **argv){
     }
     std::cout << "ROS STARTED";
 
+
     while(ros::ok()){
-        for(int i = 0; i < waypoints.size();){
-            local_pos_pub.publish(waypoints[i]);
-            ROS_INFO_STREAM("Current Waypoint is = \n" << waypoints[i]);
-            if (drone_is_approximately_at_waypoint(waypoints[i],current_pose,POSITION_COMPONENT_TOLERANCE_M))
-            {
-                ROS_INFO_STREAM("CURRENTLY AT WAYPOINT!");
-                i++;
-            }
+        while (!drone_is_approximately_at_search_waypoint(waypoints[current_wp_index],current_pose,POSITION_COMPONENT_TOLERANCE_M)){
+            // keep publishing the waypoint until you get at the waypoint 
+            local_pos_pub.publish(waypoints[current_wp_index]);
+            ROS_INFO_STREAM("Current Waypoint is = \n" << waypoints[current_wp_index]);
+            ROS_INFO_STREAM("CURRENTLY AT WAYPOINT: " << current_wp_index);
             ros::spinOnce();
             rate.sleep();
         }
+
+        // if current_wp_index reaches the end of waypoints, reset it to home
+        if (current_wp_index >= waypoints.size()-1){
+            current_wp_index = 0;
+            FINISHED_SEARCHING = true; 
+        }
+
+        // If arbitrary condition is met, execute custom behavior
+        if (current_wp_index % CONDITION_WAYPOINT_INTERVAL == 0 && !FINISHED_SEARCHING && current_wp_index != 0){
+            
+            // Simple custom behavior: yaw 90 degrees to the right and then return
+            mavros_msgs::PositionTarget custom_wp = waypoints[current_wp_index];
+            custom_wp.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+
+            custom_wp.type_mask = mavros_msgs::PositionTarget::IGNORE_VX + mavros_msgs::PositionTarget::IGNORE_VY +
+            mavros_msgs::PositionTarget::IGNORE_VZ + mavros_msgs::PositionTarget::IGNORE_AFX +
+            mavros_msgs::PositionTarget::IGNORE_AFY + mavros_msgs::PositionTarget::IGNORE_AFZ +
+            mavros_msgs::PositionTarget::FORCE + mavros_msgs::PositionTarget::IGNORE_YAW +
+            mavros_msgs::PositionTarget::IGNORE_YAW_RATE;
+
+            custom_wp.yaw = 3*PI/4;
+            custom_wp.position.z = 2; 
+            for (int i = 0; i < 5*RATE; ++i){  // yaw for 5 second
+                local_pos_pub.publish(custom_wp);
+                ROS_INFO_STREAM("CONDITION MET, EXECUTING CUSTOM BEHAVIOR");
+                ROS_INFO_STREAM("custom behaviour Waypoint is = \n" << custom_wp);
+                ros::spinOnce();
+                rate.sleep();
+            }
+
+            for (int i = 0; i < 3*RATE; ++i){  // return to original yaw angle over 1 second
+                local_pos_pub.publish(waypoints[current_wp_index]);
+            }
+            ROS_INFO_STREAM("CUSTOM BEHAVIOR COMPLETED");
+
+        }
+        if (!FINISHED_SEARCHING)
+        {
+            current_wp_index++;
+        }
+        while (FINISHED_SEARCHING)
+        {
+            // keep hovering at home position 
+            local_pos_pub.publish(waypoints[current_wp_index]);
+            ROS_INFO_STREAM("Home position waypoint = \n" << waypoints[current_wp_index]);
+            ROS_INFO_STREAM("Returned Home: " << current_wp_index);
+            ros::spinOnce();
+            rate.sleep();
+        }
+
     }
 
 
