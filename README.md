@@ -1,42 +1,60 @@
+# Autonomous Indoor Search with PX4 & MAVROS
 
-![lawnmower_search_fig](https://github.com/amashry/autonomous-search-indoors/assets/98168605/7b07b0ef-f52c-413b-99da-336e6f83761c)
+This ROS node facilitates a left-to-right lawnmower search algorithm integrated with MAVROS and PX4, targeted primarily for autonomous indoor applications.
 
-# Simulation 
-![search_grid_simulation](https://github.com/amashry/autonomous-search-indoors/assets/98168605/9e1944bf-47f3-49e8-b9ff-0aa4eb79a228)
+![Lawnmower Search Illustration](https://github.com/amashry/autonomous-search-indoors/assets/98168605/7b07b0ef-f52c-413b-99da-336e6f83761c)
 
-full video: https://drive.google.com/file/d/1LT0K3gaqwdd0eGpYQzA2Q_Wcw3-fH4S5/view?usp=sharing 
+## Features
+- **Versatile Application**: Initially integrated for a specific mission, this implementation is designed to be general enough for various applications.
+- **Search Waypoints Generation**: Generates waypoints for the drone to follow based on user-defined parameters, like the search area, altitude, and time duration.
+- **Conditional Custom Action**: Demonstrates how to integrate a custom action based on certain conditions during the search. Currently, the drone stops, ascends to a higher altitude briefly, and then resumes from the last search waypoint.
 
-# Real Flight Test
+## Simulations and Testing
 
+### Gazebo Simulation
+The algorithm has been tested in the Gazebo simulation environment. 
 
+![Search Grid Simulation](https://github.com/amashry/autonomous-search-indoors/assets/98168605/9e1944bf-47f3-49e8-b9ff-0aa4eb79a228)
+
+For a the full video overview, check out the [simulation video](https://drive.google.com/file/d/1LT0K3gaqwdd0eGpYQzA2Q_Wcw3-fH4S5/view?usp=sharing).
+
+### Real Flight Test
+The implementation has also been validated using a real drone, particularly the ModalAI m500 drone.
 
 https://github.com/amashry/autonomous-search-indoors/assets/98168605/91bc7c68-134e-46bd-bc28-38f212946184
 
+## How it Works
 
-# autonomous-search-indoors
-basic search algorithm for autonomous indoors missions using PX4 and MAVROS
+### Waypoint Generation
+Starting from the `(0,0)` position (home position) inside the target area and facing forward (aligned with the ENU frame), the `generate_waypoints_function` computes the waypoints based on the following inputs:
+- **Boundary Size**: Defined by `width` (X-axis) and `length` (Y-axis) in meters.
+- **Overlap Intervals**: Number of intervals along the Y-axis (as depicted in the figure).
+- **Altitude**: Desired flight altitude in meters.
+- **Search Time**: Time in seconds, determining the drone speed to cover the specified area.
 
-This ROS node is a basic implementation of left-to-right lawnmower search algorithm using MAVROS and PX4. Tested in Gazebo simulation and on a real vehicle (ModalAI m500 drone). 
+### Custom Behavior
+The current custom behavior serves as a placeholder, showcasing how specific behaviors can be added based on particular conditions. Every 50 waypoints, the drone pauses its search, ascends by half a meter, and hovers for 5 seconds. It then descends back to its original altitude and continues the search pattern. Once the drone completes the entire search grid, it returns to its home position and hovers until manually landed by the user.
 
-The current implementation has been integrated into another mission, however, it has been added here to generalize for several other applications. The implementation generates search waypoints for the drone to follow, with user-defined parameters for the desired search area, altitude, and time. Then, it shows an example for taking an action once some arbitrary condition is met while searching. 
+### Coordinate Frames
+The implementation strictly follows the ROS standard coordinate frames. This means that the local inertial frame is in ENU (East, North, Up). MAVROS communicates the desired waypoints to PX4 as PositionTarget messages or setpoints. Due to PX4's native NED (North, East, Down) coordinate system, it's essential to set the `coordinate_frame` in the `mavros_msgs::PositionTarget` to `FRAME_LOCAL_NED`.
 
-The current custom action that’s integrated is for the drone to stop and climb to a higher altitude for a short time, and then goes back to its last published search waypoint. 
+## How to Use
 
-The figure shows how `generate_waypoints_function` works. Given that the drone starts at the `(0,0)` position (home position) inside the desired area, and facing straight ahead (aligning with the ENU frame). The function takes the following as inputs: 
+```bash
+# Navigate to the 'src' directory of your 'catkin_ws':
+cd ~/catkin_ws/src
 
-- The boundary size of the area `width` (along X), and `length` (along Y) in `meters` .
-- Number of overlap intervals across the Y axis (as shown in the figure)
-- Desired altitude in meters for the drone to fly at.
-- Search time in seconds, which changes the speed of the drone to cover the desired area.
+# Clone the repository:
+git clone https://github.com/amashry/autonomous-search-indoors.git
 
- 
+# Go back to the root of your 'catkin_ws' and build the project:
+cd ..
+catkin_make
 
-Using ROS standard coordinate frames, so the local inertial frame is in ENU (X East, Y North, Z Up). MAVROS then publishes the desired waypoints as PositionTarget messages to PX4 as setpoints. Since PX4’s native coordinate system is in NED (X **N**orth, Y **E**ast, Z **D**own), we have to specify `coordinate_frame` in the `mavros_msgs::PositionTarget` to be `FRAME_LOCAL_NED`.
-## TODO 
-1. add documentation for this (illustration, simulation vid and actual mission)
-2. make the code more modular to be easily integrated later in different programs.
-3. integrate it into the main autonomous program
-4. Update the code and commit the current implementation
-5. For documentation, make sure to add how to clone the code and catkin_make it and even include the steps for how to create a catkin_ws if you don't have one. This will help the code be easily re-usable.
-6. Add another layer for the search where you integrate the april tag in simulation and search for it.
-7. Also, add the april tag tracking simulation and actual tracking. Test it in the lab
+# Source the workspace:
+source devel/setup.bash
+
+# Launch the node:
+roslaunch search_test search_test.launch
+```
+
