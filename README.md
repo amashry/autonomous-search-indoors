@@ -6,6 +6,10 @@
 
 full video: https://drive.google.com/file/d/1LT0K3gaqwdd0eGpYQzA2Q_Wcw3-fH4S5/view?usp=sharing 
 
+# Real Flight Test
+
+https://github.com/amashry/autonomous-search-indoors/assets/98168605/9f4a26d6-25d0-4ddd-b296-d58986dcae58
+
 # autonomous-search-indoors
 basic search algorithm for autonomous indoors missions using PX4 and MAVROS
 
