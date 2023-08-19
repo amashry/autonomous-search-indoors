@@ -1,8 +1,7 @@
 # Autonomous Indoor Search with PX4 & MAVROS
 
 This ROS node facilitates a left-to-right lawnmower search algorithm integrated with MAVROS and PX4, targeted primarily for autonomous indoor applications.
-
-![Lawnmower Search Illustration](https://github.com/amashry/autonomous-search-indoors/assets/98168605/7b07b0ef-f52c-413b-99da-336e6f83761c)
+![Lawnmower Search Illustration](https://github.com/amashry/autonomous-search-indoors/assets/98168605/094d5750-9877-4c63-ba50-8c80d7f58ea4)
 
 ## Features
 - **Versatile Application**: Initially integrated for a specific mission, this implementation is designed to be general enough for various applications.
